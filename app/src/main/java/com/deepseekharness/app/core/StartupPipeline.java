@@ -196,19 +196,9 @@ final class StartupPipeline {
     }
     if (!actions.current()) return null;
     if (!safeMode) {
-      if (Thread.currentThread().isInterrupted())
-        throw new java.io.InterruptedIOException("PLUGIN_CAS_COPY_INTERRUPTED");
-      actions.stage(
-          com.deepseekharness.app.util.UiText.choose(
-              "检查旧插件文件链接", "Checking legacy plugin file links"));
-      long copied =
-          requireCasCopyReceipt(
-              com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
-                  runtime.materializeCasLinks(), "PLUGIN_CAS_COPY"));
-      if (copied > 0)
-        diagnostics.message(
-            generation,
-            com.deepseekharness.app.util.UiText.format("已修复 %s 个旧包文件链接，原链接已保留。", copied));
+      // Local build: the "检查旧插件文件链接" (legacy pnpm CAS link materialization)
+      // step is skipped on purpose — it stat-walks the whole plugin tree and stalls
+      // normal startup on slow storage. Safe mode never ran it either.
       if (!actions.current()) return null;
       actions.stage(com.deepseekharness.app.util.UiText.text("注册插件"));
       // 内置插件注册：rootfs 烘焙的实体要登记进 web profile 才会被 dsh 加载。

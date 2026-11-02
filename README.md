@@ -337,6 +337,23 @@ python tools/verify-stability.py             # 稳定性验收门禁
 
 离线 rootfs 不提交 Git；发布流程（签名、门禁、真机验收、产物替换）见 [BUILD.md](BUILD.md) 与 [docs/releases/](docs/releases/)。
 
+### 本仓库的改动（DSHA Plus 个人构建）
+
+本 fork 在官方版基础上做了以下本地改动，打出来的包名为 `dsh.android.client.plus`，可与官方版同时安装：
+
+| 文件 | 改动 |
+|---|---|
+| `app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java` | 跳过启动阶段的「检查旧插件文件链接」（`materializeCasLinks`）。该步骤会 stat 遍历整个插件树，慢存储上多花约 2 秒；安全模式本来也不执行它。 |
+| `app/src/main/java/com/deepseekharness/app/runtime/TerminalRuntime.java` | 给 PTY 补 `TERM=xterm-256color`。原版只设 `LANG`/`LC_ALL`，readline 判断不出终端类型时会退化成水平滚动模式：长输入行不折行、行首出现 `<`。 |
+| `app/build.gradle`、`app/src/main/java/com/deepseekharness/app/util/AppIdentity.java` | 包名改为 `dsh.android.client.plus`。 |
+| `app/src/main/res/values/strings.xml`、`AppIdentity.java`、`DshaDocumentsProvider.java` | 应用名与「打开文档」根名改为 `DSHA Plus`。 |
+| `app/src/main/assets/runtime-descriptor.json` | 随上述 launcher 源码改动重算（`python3 tools/prepare-runtime-descriptor.py --write`）。 |
+| `build-arm64.sh` | aarch64 主机构建入口：使用 arm64 原生 aapt2、把 AGP 在 aarch64 上漏掉的 linked-resources `.ap_` 合并回 APK、zipalign 后签名。 |
+
+以上改动对原版同样适用：`TERM` 缺失与启动检查在官方包中也存在。
+
+**签名说明**：本构建使用自有密钥签名，与官方发布证书不同，无法覆盖安装官方版；因为包名不同，两版可以共存。
+
 ---
 
 ## 文档索引

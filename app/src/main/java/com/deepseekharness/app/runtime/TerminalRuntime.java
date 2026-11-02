@@ -58,6 +58,9 @@ final class TerminalRuntime {
     launcher.environment(probe, spec);
     probe.environment().put("LANG", "C.UTF-8");
     probe.environment().put("LC_ALL", "C.UTF-8");
+    // 没有 TERM 时 readline 判定终端不支持自动换行，长输入行走水平滚动模式
+    // （行首出现 '<'，内容不折行）。必须给 PTY 一个真实终端类型。
+    probe.environment().put("TERM", "xterm-256color");
     List<String> environment = new ArrayList<>(probe.environment().size());
     probe
         .environment()

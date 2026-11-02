@@ -146,7 +146,7 @@ public class DshaDocumentsProvider extends DocumentsProvider {
           value = "root";
           break;
         case "title":
-          value = "DSHA";
+          value = "DSHA Plus";
           break;
         case "summary":
           value = com.deepseekharness.app.util.UiText.text("容器文件与个人数据");
@@ -457,7 +457,7 @@ public class DshaDocumentsProvider extends DocumentsProvider {
           value = paths.id(id);
           break;
         case "_display_name":
-          value = paths.relative(id).isEmpty() ? "DSHA" : new File(id).getName();
+          value = paths.relative(id).isEmpty() ? "DSHA Plus" : new File(id).getName();
           break;
         case "mime_type":
           value = mime(file);

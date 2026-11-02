@@ -5,11 +5,11 @@ public final class AppIdentity {
   private AppIdentity() {}
 
   public static String applicationId() {
-    return "dsh.android.client";
+    return "dsh.android.client.plus";
   }
 
   public static String displayName() {
-    return "DSHA";
+    return "DSHA Plus";
   }
 
   public static String publicDirectoryName() {
