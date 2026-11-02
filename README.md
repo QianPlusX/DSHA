@@ -1,50 +1,27 @@
-# DSHA
+# DSHA Plus
 
 <p align="center">
-  <b>DeepSeek Harness 安卓启动器</b><br>
-  在手机上跑完整的 <a href="https://github.com/deepseek-ai/deepseek-harness">deepseek-harness</a> —— 免 ROOT，免 Termux，装完即用
+  <b>DeepSeek Harness 安卓启动器 · 个人构建</b><br>
+  在手机上跑完整的 <a href="https://github.com/deepseek-ai/deepseek-harness">deepseek-harness</a> —— 免 ROOT，免 Termux，装完即用<br>
+  基于 <a href="https://github.com/DSH-APP/DSHA">DSH-APP/DSHA</a> 修改
 </p>
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>
-  <a href="https://github.com/DSH-APP/DSHA/releases/latest"><img src="https://img.shields.io/github/v/release/DSH-APP/DSHA?sort=date&color=blue" alt="release"></a>
-  <a href="https://github.com/DSH-APP/DSHA/stargazers"><img src="https://img.shields.io/github/stars/DSH-APP/DSHA?style=flat" alt="stars"></a>
-  <img src="https://img.shields.io/badge/Android-6%2B%20%2F%2011%2B-3DDC84?logo=android&logoColor=white" alt="android">
-  <img src="https://img.shields.io/badge/arch-arm64--v8a-lightgrey" alt="arch">
-  <a href="https://afdian.com/a/dsha_apk"><img src="https://img.shields.io/badge/%E7%88%B1%E5%8F%91%E7%94%B5-%E8%B5%9E%E5%8A%A9-946CE6?logo=afdian&logoColor=white" alt="爱发电"></a>
-  <a href="https://qm.qq.com/q/N5aZSlnmgM"><img src="https://img.shields.io/badge/QQ%E7%BE%A4-975836806-1EBAFC?logo=qq&logoColor=white" alt="QQ群"></a>
-</p>
+## 本仓库相对原版的改动
 
-<p align="center">
-  <a href="README.en.md">English</a> · <b>简体中文</b> · <a href="https://dsha.cc">官网 dsha.cc</a> · <a href="CHANGELOG.md">更新记录</a> · <a href="docs/security-model.md">安全模型</a> · <a href="AGENTS.md">AGENTS.md（给 AI / 开发者）</a>
-</p>
+本 fork 在官方版基础上做了以下本地改动，打出来的包名为 `dsh.android.client.plus`，可与官方版同时安装：
 
-> 🤖 下一个 AI / 开发者请先读 **[AGENTS.md](AGENTS.md)**（项目结构、启动契约、踩过的坑），不要先全库扫描。
+| 文件 | 改动 |
+|---|---|
+| `app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java` | 跳过启动阶段的「检查旧插件文件链接」（`materializeCasLinks`）。该步骤会 stat 遍历整个插件树，慢存储上多花约 2 秒；安全模式本来也不执行它。 |
+| `app/src/main/java/com/deepseekharness/app/runtime/TerminalRuntime.java` | 给 PTY 补 `TERM=xterm-256color`。原版只设 `LANG`/`LC_ALL`，readline 判断不出终端类型时会退化成水平滚动模式：长输入行不折行、行首出现 `<`。 |
+| `app/build.gradle`、`app/src/main/java/com/deepseekharness/app/util/AppIdentity.java` | 包名改为 `dsh.android.client.plus`。 |
+| `app/src/main/res/values/strings.xml`、`AppIdentity.java`、`DshaDocumentsProvider.java` | 应用名与「打开文档」根名改为 `DSHA Plus`。 |
+| `app/src/main/assets/runtime-descriptor.json` | 随上述 launcher 源码改动重算（`python3 tools/prepare-runtime-descriptor.py --write`）。 |
+| `build-arm64.sh` | aarch64 主机构建入口：使用 arm64 原生 aapt2、把 AGP 在 aarch64 上漏掉的 linked-resources `.ap_` 合并回 APK、zipalign 后签名。 |
 
-> 正式版 **[v0.2.1-rc.2 · build190](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.1-rc.2)**：虚拟屏、全局授权、新旧共存及移动 UI 更新。[中文文档索引](docs/documentation-index.md) · [English](docs/en/index.md)。
+以上改动对原版同样适用：`TERM` 缺失与启动检查在官方包中也存在。
 
-## ❤️ 赞助商
-
-<table>
-<tr>
-<td width="180"><a href="https://api-zeno.com"><img src="docs/sponsors/api-zeno.jpg" alt="API Zeno" width="150"></a></td>
-<td>感谢 <a href="https://api-zeno.com">API-Zeno</a> 赞助本项目！API-Zeno 汇集国内外主流 AI 模型，满足学习、创作、编程等需求。平台注重实际使用体验，提供操作指南、问题答疑与技术支持，支持在 DSHA 中接入使用。新用户注册即赠 5 元体验额度，欢迎体验！</td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td width="180"><a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X"><img src="docs/sponsors/lvluo.jpg" alt="绿萝中转站" width="150"></a></td>
-<td>感谢 <a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X">绿萝中转站</a> 赞助本项目！绿萝中转站是一个包含多种厂家模型的 AI 平台，多款主流大模型随开随用，写代码、生成图片等等都能在同一平台调用。国内外模型应有尽有，上新及时，服务周到，价格美丽。使用本链接注册可享受充值 105% 优惠。</td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td width="180"><a href="https://ai.onyxaxis.org/"><img src="docs/sponsors/axis-ai.jpg" alt="Axis AI" width="150"></a></td>
-<td>感谢 <a href="https://ai.onyxaxis.org/">Axis AI</a> 赞助本项目！Axis AI 是一个免费的公益 AI 平台，多款主流大模型随开随用，聊天、写代码、生成图片都能在同一平台内实现。</td>
-</tr>
-</table>
+**签名说明**：本构建使用自有密钥签名，与官方发布证书不同，无法覆盖安装官方版；因为包名不同，两版可以共存。
 
 ---
 
@@ -60,55 +37,6 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 
 由贡献者 [@ym2025szz](https://github.com/ym2025szz) 维护并发布，感谢原作者
 [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) 和其他贡献者。
-
----
-
-## 下载
-
-当前正式版 **[v0.2.1-rc.2 · build190](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.1-rc.2)** · Standard 标准版，Android 11+ / arm64 · **278.66 MiB**。
-
-[下载 APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/dsha-0.2.1-rc.2.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/dsha-0.2.1-rc.2.apk.sha256) · [完整源码与固定离线构建输入](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/DSHA-0.2.1-rc.2-20261022.2100-source.zip) · [发布说明](docs/releases/v0.2.1-rc.2-notes.md)
-
-- **新旧共存**：新版包名 `dsh.android.client`，可与旧版 `com.dsh.client` 并排安装；数据和授权独立，需要迁移时使用备份导出/恢复。同时运行两套服务仍可能遇到设备端口冲突。
-- **虚拟屏与全局授权**：实验性虚拟屏通过已授权的 ADB / Root / Shizuku 通道操作；确认策略支持全部手动、按应用和全部允许，仅控制 DSHA 确认，不代替系统授权或系统沙箱。
-- **环境与交互更新**：内置 DSH **0.2.1-rc.2**、移动 UI **3.2.1**，默认 **proot**、可选 **proroot**；修复插件启动/管理、局域网与登录、键盘衔接和后台恢复等路径，会话单击切换。画中画**默认关闭**，由用户主动开启。
-- **备份与数据保护**：一键备份/导出，保留用户数据；移除危险的彻底重装，外置工作区内容保留。
-
-完整版本名 `0.2.1-rc.2-20261022.2100-dsh0.2.1-rc.2` / code190，E7E3 正式签名、非调试。保留 APK 原版本字符串，本次发布为 **GitHub 正式版 / Latest**。本次提供 Standard APK；旧 Low 发布保留，不新增 Low APK。
-
-### 开始使用
-
-1. 安装标准版 APK，首次启动准备内置离线环境。
-2. 解压完成进入主页，Web 在后台启动；就绪后进入 Web UI，在网页中配置模型。
-3. 从旧包迁移请先导出备份，再在新包恢复；以后同包覆盖更新前，请先正常停止 DSH。
-
-精确 APK 已在 Android 13 对两种运行时、旧会话、插件状态及立即息屏启动做有限检查；页面延迟仍有波动，不承诺所有机型普遍提速或完整 Doze/功耗验收。详见[验证范围与已知限制](docs/releases/v0.2.1-rc.2-notes.md)。[下载校验](docs/download-verification.md)；官网与应用内更新清单独立于本次 GitHub 发布。
-
-<details>
-<summary>历史版本介绍（原文保留）</summary>
-
-下表属于上一 build170 版本的比较说明；v1.1.10 及更早的 Release 正文和历史标签继续保留。
-
-| 以前发布的版本 | 本版主要增加 |
-|---|---|
-| [v0.1.7-rc2 / 147，上一正式版](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.7-rc2) | DSH 0.1.7 → 0.2.0 rc2、移动 UI 3.0.3 → 3.0.5，以及上面的文件、草稿、ADB、shell、插件和备份改进。 |
-| [v0.1.5-rc2 / 129](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.5-rc2) | 还累积加入自动备份、独立应急、按需录音、PiP、Standard 实验性虚拟屏及受管更新改进。 |
-| [v1.1.10 及更早版本](https://github.com/DSH-APP/DSHA/releases/tag/v1.1.10) | 已转为双 APK、受管 Ubuntu/DSH 更新与宿主备份恢复；完整直接升级矩阵尚未重新验证，原版说明保留在历史标签。 |
-
-</details>
-
----
-
-## 为什么是 DSHA
-
-|  | 说明 |
-|---|---|
-| 🚫 **零命令行门槛** | 内置离线 Ubuntu rootfs，APK 装完就能用。不装 Termux、不配 pkg、不敲命令 |
-| 🐧 **完整 glibc 环境** | 不是裁剪版：`apt` / PTY / 原生模块 / Python / git 都在。上游插件不用改就能跑 |
-| ⚙️ **双运行时选择** | 默认proot、可选proroot；实际性能取决于设备、I/O、缓存和插件，不以历史异条件样本给引擎排名 |
-| 🔌 **手机就是 agent 的手** | 无障碍 + ADB 免 Shizuku 直连 + 独立虚拟屏：读屏、点按、装应用、跑自动化，全部内置 |
-| 💾 **导出后迁移数据** | “数据与备份”导出无需密码的 `.tar.gz`；数据位置可在存储指南查看，本机副本不保证卸载后存续 |
-| 🩺 **坏了能自己说清哪坏了** | 组件级自检 + 按需修补 + 启动诊断 + 独立应急 DSH；Web 起不来时直接点名是哪个插件 |
 
 ---
 
@@ -238,20 +166,6 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 
 ---
 
-## 与同类方案的关系
-
-安卓上跑 dsh 目前有两条路，各有代价，说清楚比互相贴标签有用：
-
-| | **容器派**（DSHA 走这条） | **Termux bootstrap 派** |
-|---|---|---|
-| 做法 | proot/proroot + 完整 glibc rootfs | 用 Termux 的包在 Android bionic 上裸跑 |
-| 装机 | 装 APK 就完事 | 装 Termux → 敲命令 → 装工具链 |
-| 环境 | 完整 Ubuntu，`apt` 与原生模块随便用 | 需要为 bionic 逐个打补丁 / 重编 |
-| 开销 | 存在系统调用与文件 I/O 转译开销，实际耗时依设备与场景 | 无容器层，理论最快 |
-| 沙箱 | 两边都受限 | 两边都受限 |
-
----
-
 ## 已知限制
 
 诚实列出来，省得你装完才发现：
@@ -293,37 +207,6 @@ API key 由 Android Keystore 保护，本机密钥与自动副本不保证卸载
 
 ---
 
-## ADB 无线配对（设备 Shell 能力）
-
-配好之后 agent 就能直接操作这台手机，**不需要 Shizuku**。
-
-**首次配对（约 1 分钟）**
-
-1. 系统设置 →「关于手机」→ 连点「版本号」7 次开启开发者选项
-2. 开发者选项 → 打开「无线调试」
-3. 进入「无线调试」→「使用配对码配对设备」，记下 **IP:端口** 与 **6 位配对码**
-4. 回到 DSHA →「设备能力授权」页 → 填入 → 配对
-
-> 无线调试的配对码需要 Android 11+；老系统可走 Shizuku / Root 通道，或直接用无障碍能力（读屏、点按、输入不需要任何配对）。
-
-无线调试尚未开启时，“验证已有连接”可以先准备内置离线依赖；出现 `ADB_OFFLINE_READY` 仅表示依赖就绪。之后仍需打开无线调试并完成配对或连接验证。
-
-**配对之后**：DSHA 自己维护连接（保活 + 重连），重启手机后也会自动恢复，不用再操作。
-
-**验证**：内置终端里跑 `adb shell id`，输出 `uid=2000(shell)` 即成功。
-
-**让 agent 用起来**：把技能包复制到 agent 的技能目录：
-
-```bash
-cp -r agent-skills/device-shell ~/.agents/skills/
-cp -r agent-skills/screen-ocr-operator ~/.agents/skills/
-```
-
-`device-shell` 覆盖 ADB / Shizuku / Root 三通道的命令用法；
-`screen-ocr-operator` 提供截屏 + OCR + 批量屏幕操作（无障碍读屏拿不到内容的 WebView / 游戏画面用）。
-
----
-
 ## 构建
 
 本地构建需要 JDK 17、Android SDK（API 37）、NDK 26 与 Python 3.9+，详见 [BUILD.md](BUILD.md)：
@@ -337,69 +220,19 @@ python tools/verify-stability.py             # 稳定性验收门禁
 
 离线 rootfs 不提交 Git；发布流程（签名、门禁、真机验收、产物替换）见 [BUILD.md](BUILD.md) 与 [docs/releases/](docs/releases/)。
 
-### 本仓库的改动（DSHA Plus 个人构建）
+### aarch64 主机构建
 
-本 fork 在官方版基础上做了以下本地改动，打出来的包名为 `dsh.android.client.plus`，可与官方版同时安装：
+在 arm64 主机（手机 / 平板）上构建用 `build-arm64.sh`：
 
-| 文件 | 改动 |
-|---|---|
-| `app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java` | 跳过启动阶段的「检查旧插件文件链接」（`materializeCasLinks`）。该步骤会 stat 遍历整个插件树，慢存储上多花约 2 秒；安全模式本来也不执行它。 |
-| `app/src/main/java/com/deepseekharness/app/runtime/TerminalRuntime.java` | 给 PTY 补 `TERM=xterm-256color`。原版只设 `LANG`/`LC_ALL`，readline 判断不出终端类型时会退化成水平滚动模式：长输入行不折行、行首出现 `<`。 |
-| `app/build.gradle`、`app/src/main/java/com/deepseekharness/app/util/AppIdentity.java` | 包名改为 `dsh.android.client.plus`。 |
-| `app/src/main/res/values/strings.xml`、`AppIdentity.java`、`DshaDocumentsProvider.java` | 应用名与「打开文档」根名改为 `DSHA Plus`。 |
-| `app/src/main/assets/runtime-descriptor.json` | 随上述 launcher 源码改动重算（`python3 tools/prepare-runtime-descriptor.py --write`）。 |
-| `build-arm64.sh` | aarch64 主机构建入口：使用 arm64 原生 aapt2、把 AGP 在 aarch64 上漏掉的 linked-resources `.ap_` 合并回 APK、zipalign 后签名。 |
+```bash
+bash build-arm64.sh            # 构建 + 合并资源 + 签名，输出到 outputs/
+bash build-arm64.sh --no-sign  # 只构建未签名包
+```
 
-以上改动对原版同样适用：`TERM` 缺失与启动检查在官方包中也存在。
-
-**签名说明**：本构建使用自有密钥签名，与官方发布证书不同，无法覆盖安装官方版；因为包名不同，两版可以共存。
+它使用 arm64 原生 aapt2，并在打包后把 AGP 在 aarch64 上漏掉的 linked-resources `.ap_` 合并回 APK，再 zipalign、签名。官方 `build.sh` 仍用于 x86_64 主机与单测。
 
 ---
-
-## 文档索引
-
-| 文档 | 内容 |
-|---|---|
-| [AGENTS.md](AGENTS.md) | 项目结构、启动契约、技术约束与踩坑记录（AI / 新贡献者入口） |
-| [docs/security-model.md](docs/security-model.md) | 安全模型：每项权限的边界与已知弱点（[英文版](docs/security-model.en.md)） |
-| [docs/plugins.md](docs/plugins.md) | 插件安装与打包要求 |
-| [CHANGELOG.md](CHANGELOG.md) | 完整更新记录 |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | 路线图与「明确不做」清单 |
-| [docs/android-standard.md](docs/android-standard.md) / [android-low.md](docs/android-low.md) | 两版设备适配说明 |
-| [docs/releases/](docs/releases/) | 各版本发布与验收记录 |
-
-## 致谢
-
-- [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) —— 本体
-- [proroot](https://github.com/coderredlab/proroot) / [proot](https://github.com/termux/proot) —— 免 ROOT 容器（见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)）
-- [Termux terminal-view / terminal-emulator](https://github.com/termux/termux-app)（Apache-2.0）—— PTY 终端
-- [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) —— 内置移动端适配
-- [Shizuku](https://shizuku.rikka.app/) —— 备用设备命令通道
-
-## 交流
-
-QQ 群 **975836806** (二群)—— 测试版、问题反馈、插件交流。
-❗二群已满，请加一群❗
-★QQ 群**960636357** (老一群)现已扩容！
-
-| 事宜 | 联系 |
-|---|---|
-| 项目主创（合作/授权/入伙） | QQ 2921185884 |
-| 现维护者（项目提议/反馈，或直接提 issue） | QQ 1876843459 |
-| Email | 1437ht@gmail.com |
 
 ## 许可
 
 [MIT](LICENSE)。第三方组件许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
-
-## Star History
-
-<a href="https://github.com/DSH-APP/DSHA/stargazers">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/star-history-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="docs/star-history.svg" />
-    <img alt="DSHA Star History" src="docs/star-history.svg" width="820" />
-  </picture>
-</a>
-
-<sub>由 [`tools/gen-star-history.py`](tools/gen-star-history.py) 每 12 小时读取 GitHub 星标时间并更新（[workflow](.github/workflows/star-history.yml)）。浅色、深色 SVG 保存在本仓库；曲线按当前仍保留的星标汇总。</sub>
