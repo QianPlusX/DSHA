@@ -16,6 +16,7 @@
 | `app/src/main/java/com/deepseekharness/app/runtime/TerminalRuntime.java` | 给 PTY 补 `TERM=xterm-256color`。原版只设 `LANG`/`LC_ALL`，readline 判断不出终端类型时会退化成水平滚动模式：长输入行不折行、行首出现 `<`。 |
 | `app/build.gradle`、`app/src/main/java/com/deepseekharness/app/util/AppIdentity.java` | 包名改为 `dsh.android.client.plus`。 |
 | `app/src/main/res/values/strings.xml`、`AppIdentity.java`、`DshaDocumentsProvider.java` | 应用名与「打开文档」根名改为 `DSHA Plus`。 |
+| `app/src/main/AndroidManifest.xml`、`app/src/main/java/com/deepseekharness/app/ui/AccessibilitySetupActivity.java` | 无障碍服务名 `DSHA 配对助手` 改为 `DSHA Plus`（系统设置 → 已下载的应用 / 无障碍里显示的名字），引导文案同步。 |
 | `app/src/main/assets/runtime-descriptor.json` | 随上述 launcher 源码改动重算（`python3 tools/prepare-runtime-descriptor.py --write`）。 |
 | `build-arm64.sh` | aarch64 主机构建入口：使用 arm64 原生 aapt2、把 AGP 在 aarch64 上漏掉的 linked-resources `.ap_` 合并回 APK、zipalign 后签名。 |
 
