@@ -19,6 +19,7 @@
 | `app/src/main/AndroidManifest.xml`、`app/src/main/java/com/deepseekharness/app/ui/AccessibilitySetupActivity.java` | 无障碍服务名 `DSHA 配对助手` 改为 `DSHA Plus`（系统设置 → 已下载的应用 / 无障碍里显示的名字），引导文案同步。 |
 | `app/src/main/assets/runtime-descriptor.json` | 随上述 launcher 源码改动重算（`python3 tools/prepare-runtime-descriptor.py --write`）。 |
 | `build-arm64.sh` | aarch64 主机构建入口：使用 arm64 原生 aapt2、把 AGP 在 aarch64 上漏掉的 linked-resources `.ap_` 合并回 APK、zipalign 后签名。 |
+| `app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java`、`app/src/main/assets/device-shell-policy.py` | 设备命令放行 `pm install`：只接受公开存储或 `/data/local/tmp` 里的 `.apk`，选项逐项白名单；ADB 通道按同一份白名单复核。 |
 
 以上改动对原版同样适用：`TERM` 缺失与启动检查在官方包中也存在。
 

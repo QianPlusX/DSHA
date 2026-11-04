@@ -18,6 +18,7 @@ public final class DeviceShellPolicy {
     STOP,
     SENSITIVE_READ,
     VIRTUAL_SCREEN,
+    INSTALL,
     DENY
   }
 
@@ -94,6 +95,48 @@ public final class DeviceShellPolicy {
         Kind.DENY, Collections.emptyList(), Collections.emptyList(), "[POLICY_BLOCKED] " + reason);
   }
 
+  private static final Set<String> INSTALL_FLAGS = set("-r -d -g -t -f -s");
+  private static final Set<String> INSTALL_VALUE_FLAGS = set("-i -S --user --abi");
+  private static final Set<String> INSTALL_LONG_FLAGS =
+      set("--force-queryable --staged --instant --bypass-low-target-sdk-block --force-non-staged");
+  private static final String[] INSTALL_ROOTS = {
+    "/sdcard/", "/storage/", "/mnt/", "/data/local/tmp/", "/data/media/"
+  };
+
+  /** pm install 只接受本机公开存储或临时目录里的 APK，argv 逐项白名单。 */
+  private static Plan inspectInstall(List<String> args) {
+    List<String> apks = new ArrayList<>();
+    for (int i = 2; i < args.size(); i++) {
+      String arg = args.get(i);
+      if (arg.startsWith("/")) {
+        if (!installableApkPath(arg)) return deny("安装包路径不可识别：" + arg);
+        apks.add(arg);
+      } else if (INSTALL_FLAGS.contains(arg) || INSTALL_LONG_FLAGS.contains(arg)) {
+        continue;
+      } else if (INSTALL_VALUE_FLAGS.contains(arg)) {
+        if (++i >= args.size()) return deny("安装选项缺少参数：" + arg);
+        String value = args.get(i);
+        if (arg.equals("-i") && !packageName(value)) return deny("安装选项 -i 需要包名");
+        if (arg.equals("-S") && !value.matches("[0-9]+")) return deny("安装选项 -S 需要字节数");
+        if (arg.equals("--user") && !value.matches("[0-9]+|current")) return deny("无法识别用户编号");
+        if (arg.equals("--abi") && !value.matches("[A-Za-z0-9_]+")) return deny("无法识别 ABI");
+      } else {
+        return deny("未识别的 pm install 参数：" + arg);
+      }
+    }
+    if (apks.isEmpty()) return deny("pm install 需要一个 APK 路径");
+    return plan(Kind.INSTALL, args, apks);
+  }
+
+  private static boolean installableApkPath(String path) {
+    if (!path.endsWith(".apk") || path.indexOf('\\') >= 0 || path.indexOf('\0') >= 0
+        || path.matches(".*\\s.*") || path.contains("//")) return false;
+    for (String part : path.split("/")) if (part.equals(".") || part.equals("..")) return false;
+    String lower = path.toLowerCase(Locale.ROOT);
+    for (String root : INSTALL_ROOTS) if (lower.startsWith(root)) return true;
+    return false;
+  }
+
   public static Plan inspect(String command) {
     final List<String> args;
     try {
@@ -144,6 +187,7 @@ public final class DeviceShellPolicy {
       return deny(com.deepseekharness.app.util.UiText.text("系统设置只允许 get/list，禁止写入"));
     }
     if (name.equals("pm")) {
+      if (args.size() >= 3 && args.get(1).equals("install")) return inspectInstall(args);
       if (args.size() == 3 && set("path dump").contains(args.get(1)) && packageName(args.get(2)))
         return plan(Kind.READ, args, Collections.emptyList());
       if (args.size() >= 3

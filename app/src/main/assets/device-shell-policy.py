@@ -282,8 +282,45 @@ def valid_vscreen_identity(value):
             and bool(re.fullmatch(uuid, fields[3])) and bool(re.fullmatch(uuid, fields[4])))
 
 
+INSTALL_OPTIONS = {'-r', '-d', '-g', '-t', '-f', '-s'}
+INSTALL_VALUE_OPTIONS = {'-i', '-S', '--user', '--abi'}
+INSTALL_LONG_OPTIONS = {'--force-queryable', '--staged', '--instant',
+                        '--bypass-low-target-sdk-block', '--force-non-staged'}
+INSTALL_ROOTS = ('/sdcard/', '/storage/', '/mnt/', '/data/local/tmp/', '/data/media/')
+
+
+def validate_install(plan):
+    """原生已校验一次；ADB 侧按同一份白名单复核 argv，防计划被替换。"""
+    argv = plan.get('argv')
+    if not isinstance(argv, list) or len(argv) < 3 or argv[0] != 'pm' or argv[1] != 'install':
+        raise Blocked('安装计划无法核验')
+    apks = 0
+    i = 2
+    while i < len(argv):
+        arg = argv[i]
+        if arg.startswith('/'):
+            if (not arg.endswith('.apk') or '..' in arg.split('/') or '\\' in arg
+                    or '//' in arg or any(ch.isspace() for ch in arg)
+                    or not arg.lower().startswith(INSTALL_ROOTS)):
+                raise Blocked('安装包路径不可识别：' + arg)
+            apks += 1
+        elif arg in INSTALL_OPTIONS or arg in INSTALL_LONG_OPTIONS:
+            pass
+        elif arg in INSTALL_VALUE_OPTIONS:
+            i += 1
+            if i >= len(argv):
+                raise Blocked('安装选项缺少参数：' + arg)
+        else:
+            raise Blocked('未识别的 pm install 参数：' + arg)
+        i += 1
+    if apks == 0:
+        raise Blocked('安装计划缺少 APK 路径')
+    if plan.get('su'):
+        raise Blocked('pm install 不允许 root shell')
+
+
 def execute(plan, shell, result_class):
-    if not isinstance(plan, dict) or plan.get('version') != 1 or plan.get('kind') not in ('READ', 'FILE', 'STOP', 'VIRTUAL_SCREEN'):
+    if not isinstance(plan, dict) or plan.get('version') != 1 or plan.get('kind') not in ('READ', 'FILE', 'STOP', 'VIRTUAL_SCREEN', 'INSTALL'):
         raise Blocked('原生设备策略没有授权此操作')
     if plan['kind'] == 'VIRTUAL_SCREEN':
         argv = plan.get('argv')
@@ -306,6 +343,9 @@ def execute(plan, shell, result_class):
                 or plan.get('su', False)):
             raise Blocked('虚拟屏启动参数无法核验')
         return shell(argv_command(argv))
+    if plan['kind'] == 'INSTALL':
+        validate_install(plan)
+        return shell(argv_command(plan['argv']))
     # ADB may itself be privileged; SMS file paths never bypass native query authorization.
     validate_root_reads(plan, shell)
     if plan['kind'] == 'STOP':
