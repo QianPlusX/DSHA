@@ -49,6 +49,14 @@ public final class ForegroundActivity implements Application.ActivityLifecycleCa
   @Override
   public void onActivityStopped(Activity activity) {
     left(activity);
+    if (startedActivities > 0) startedActivities--;
+    if (startedActivities > 0) return;
+    var controller = com.deepseekharness.app.core.HarnessController.get(activity);
+    if (controller != null && controller.isWebRunning()) {
+      com.deepseekharness.app.util.KeepAliveWindow.show(activity);
+    } else {
+      com.deepseekharness.app.util.KeepAliveWindow.hide();
+    }
   }
 
   @Override
@@ -59,8 +67,13 @@ public final class ForegroundActivity implements Application.ActivityLifecycleCa
   @Override
   public void onActivityCreated(Activity activity, Bundle saved) {}
 
+  private int startedActivities;
+
   @Override
-  public void onActivityStarted(Activity activity) {}
+  public void onActivityStarted(Activity activity) {
+    startedActivities++;
+    com.deepseekharness.app.util.KeepAliveWindow.hide();
+  }
 
   @Override
   public void onActivitySaveInstanceState(Activity activity, Bundle saved) {}

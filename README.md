@@ -20,6 +20,7 @@
 | `app/src/main/assets/runtime-descriptor.json` | 随上述 launcher 源码改动重算（`python3 tools/prepare-runtime-descriptor.py --write`）。 |
 | `build-arm64.sh` | aarch64 主机构建入口：使用 arm64 原生 aapt2、把 AGP 在 aarch64 上漏掉的 linked-resources `.ap_` 合并回 APK、zipalign 后签名。 |
 | `app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java`、`app/src/main/assets/device-shell-policy.py` | 设备命令放行 `pm install`：只接受公开存储或 `/data/local/tmp` 里的 `.apk`，选项逐项白名单；ADB 通道按同一份白名单复核。 |
+| `ForegroundActivity.java`、`util/KeepAliveWindow.java` | 退到后台时挂 1×1 不可见悬浮窗（`TYPE_APPLICATION_OVERLAY`），让进程保持可感知重要级别；回前台立即移除，未授权「显示在其他应用上层」时静默跳过。 |
 
 以上改动对原版同样适用：`TERM` 缺失与启动检查在官方包中也存在。
 
