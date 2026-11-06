@@ -88,6 +88,11 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
 
     BrowserTasks.entry("CREATE", getIntent());
+    if (BrowserTasks.launcher(getIntent()) && BrowserTasks.openRunningWeb(this)) {
+      discardedLauncherEntry = true;
+      finish(); // The running Web task is now in front; this wrapper is not shown.
+      return;
+    }
     if (resumeBackground(getIntent())) {
       discardedLauncherEntry = true;
       finish(); // Only this newly created native wrapper; the existing Web task is retained.
@@ -439,6 +444,7 @@ public class MainActivity extends AppCompatActivity {
     super.onNewIntent(intent);
     setIntent(intent);
     BrowserTasks.entry("NEW_INTENT", intent);
+    if (BrowserTasks.launcher(intent) && BrowserTasks.openRunningWeb(this)) return;
     if (resumeBackground(intent)) return;
     if (!mainReady) {
       entryGate.cancel();

@@ -181,6 +181,35 @@ final class BrowserTasks {
     }
   }
 
+  /**
+   * Launcher re-entry while the Web page is still alive returns to that task directly.
+   *
+   * <p>Without this the launcher task resumes the native shell first and only then bounces
+   * into the Web task, so the user sees the start page flash on every re-open. This path
+   * does not wait for the page identity to be re-verified: the running session is the
+   * target, and the Web UI re-checks itself once it is in front.
+   */
+  static boolean openRunningWeb(Context context) {
+    if (!com.deepseekharness.app.core.HarnessController.get(context).isWebRunning()) return false;
+    try {
+      ActivityManager manager =
+          (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+      if (manager == null) return false;
+      for (ActivityManager.AppTask task : manager.getAppTasks()) {
+        var info = task.getTaskInfo();
+        if (info.baseActivity != null
+            && WebPreviewActivity.class.getName().equals(info.baseActivity.getClassName())) {
+          task.moveToFront();
+          trace("RESUME_RUNNING_WEB");
+          return true;
+        }
+      }
+    } catch (RuntimeException unavailable) {
+      android.util.Log.w("DSHA", "BROWSER_RESUME_WEB: " + unavailable.getClass().getSimpleName());
+    }
+    return false;
+  }
+
   static void rememberMain(Activity activity) {
     if (!activity.isFinishing()
         && !activity.isDestroyed()
