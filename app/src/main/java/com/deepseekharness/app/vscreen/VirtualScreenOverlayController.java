@@ -64,12 +64,14 @@ public final class VirtualScreenOverlayController {
     manager = (WindowManager) app.getSystemService(Context.WINDOW_SERVICE);
     panel = new LinearLayout(app);
     panel.setOrientation(LinearLayout.VERTICAL);
-    panel.setBackgroundColor(0xee101218);
+    android.graphics.drawable.GradientDrawable shell =
+        new android.graphics.drawable.GradientDrawable();
+    shell.setColor(0xee101218);
+    shell.setCornerRadius(dp(app, 16));
+    panel.setBackground(shell);
     com.deepseekharness.app.ui.DragHandleView handle =
         new com.deepseekharness.app.ui.DragHandleView(app);
-    handle.setText(
-        com.deepseekharness.app.util.UiText.choose(
-            "虚拟屏 · 拖动此处 · 点此隐藏", "Virtual screen · drag / tap to hide"));
+    handle.setText(com.deepseekharness.app.util.UiText.choose("虚拟屏", "Virtual screen"));
     handle.setTextColor(0xffffffff);
     handle.setTextSize(12);
     handle.setPadding(dp(app, 8), dp(app, 8), dp(app, 8), dp(app, 8));

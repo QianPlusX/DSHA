@@ -20,8 +20,8 @@ public final class VirtualScreenForeground {
   private ViewGroup parent;
   private ImageView image;
   private Bitmap bitmap;
+  private TextView bubble;
   private long epoch, screenEpoch = -1;
-  private String hiddenGeneration = "";
   private VirtualScreenPreviews.Lease previewLease;
 
   private final VirtualScreenManager session;
@@ -60,7 +60,6 @@ public final class VirtualScreenForeground {
     onMain(
         () -> {
           if (fence != session.epoch()) return;
-          hiddenGeneration = "";
           sync();
         });
   }
@@ -73,7 +72,6 @@ public final class VirtualScreenForeground {
     onMain(
         () -> {
           if (fence != session.epoch()) return;
-          hiddenGeneration = "";
           detach();
         });
   }
@@ -92,8 +90,7 @@ public final class VirtualScreenForeground {
         || activity.isFinishing()
         || activity.isDestroyed()
         || activity instanceof VirtualScreenActivity
-        || generation.isEmpty()
-        || hiddenGeneration.equals(generation)) {
+        || generation.isEmpty()) {
       detach();
       return;
     }
@@ -102,13 +99,18 @@ public final class VirtualScreenForeground {
     parent = activity.findViewById(android.R.id.content);
     panel = new LinearLayout(activity);
     panel.setOrientation(LinearLayout.VERTICAL);
-    panel.setBackgroundResource(R.drawable.bg_card);
+    android.graphics.drawable.GradientDrawable card =
+        new android.graphics.drawable.GradientDrawable();
+    card.setColor(activity.getColor(R.color.card));
+    card.setCornerRadius(dp(activity, 16));
+    card.setStroke(dp(activity, 1), activity.getColor(R.color.line));
+    panel.setBackground(card);
     panel.setElevation(dp(activity, 12));
     LinearLayout bar = new LinearLayout(activity);
     bar.setGravity(Gravity.CENTER_VERTICAL);
     com.deepseekharness.app.ui.DragHandleView title =
         new com.deepseekharness.app.ui.DragHandleView(activity);
-    title.setText(UiText.choose("虚拟屏 · 拖动或点按打开", "Virtual screen · drag or tap to open"));
+    title.setText(UiText.choose("虚拟屏", "Virtual screen"));
     title.setOnClickListener(
         v ->
             activity.startActivity(
@@ -122,13 +124,9 @@ public final class VirtualScreenForeground {
     hide.setTextSize(22);
     hide.setTextColor(activity.getColor(R.color.text));
     hide.setGravity(Gravity.CENTER);
-    hide.setContentDescription(UiText.choose("隐藏预览", "Hide preview"));
+    hide.setContentDescription(UiText.choose("收起为悬浮球", "Minimize to bubble"));
     bar.addView(hide, new LinearLayout.LayoutParams(dp(activity, 40), dp(activity, 40)));
-    hide.setOnClickListener(
-        v -> {
-          hiddenGeneration = session.generation();
-          detach();
-        });
+    hide.setOnClickListener(v -> minimize());
     panel.addView(bar);
     image = new ImageView(activity);
     image.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -206,6 +204,45 @@ public final class VirtualScreenForeground {
                 });
   }
 
+  /** Collapses the preview into a small bubble that reopens it. */
+  private void minimize() {
+    VirtualScreenPreviews.assertMain();
+    Activity activity = host.get();
+    if (activity == null || panel == null || bubble != null) return;
+    if (!(panel.getParent() instanceof FrameLayout holder)) return;
+    float x = Math.max(0, panel.getX());
+    float y = Math.max(0, panel.getY());
+    panel.setVisibility(android.view.View.GONE);
+    TextView dot = new TextView(activity);
+    dot.setText(UiText.choose("虚拟屏", "Screen"));
+    dot.setTextSize(11);
+    dot.setTextColor(activity.getColor(R.color.text));
+    dot.setGravity(Gravity.CENTER);
+    dot.setContentDescription(UiText.choose("展开虚拟屏预览", "Show virtual screen preview"));
+    android.graphics.drawable.GradientDrawable shape =
+        new android.graphics.drawable.GradientDrawable();
+    shape.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+    shape.setColor(activity.getColor(R.color.card));
+    shape.setStroke(dp(activity, 1), activity.getColor(R.color.line));
+    dot.setBackground(shape);
+    dot.setElevation(dp(activity, 12));
+    FrameLayout.LayoutParams lp =
+        new FrameLayout.LayoutParams(dp(activity, 60), dp(activity, 60));
+    lp.gravity = Gravity.TOP | Gravity.START;
+    lp.leftMargin = Math.round(x);
+    lp.topMargin = Math.round(y);
+    holder.addView(dot, lp);
+    bubble = dot;
+    dot.setOnClickListener(v -> restore());
+  }
+
+  private void restore() {
+    VirtualScreenPreviews.assertMain();
+    if (bubble != null && bubble.getParent() instanceof ViewGroup holder) holder.removeView(bubble);
+    bubble = null;
+    if (panel != null) panel.setVisibility(android.view.View.VISIBLE);
+  }
+
   private void detach() {
     VirtualScreenPreviews.assertMain();
     epoch++;
@@ -213,6 +250,8 @@ public final class VirtualScreenForeground {
       previewLease.close();
       previewLease = null;
     }
+    if (bubble != null && bubble.getParent() instanceof ViewGroup holder) holder.removeView(bubble);
+    bubble = null;
     if (image != null) image.setImageDrawable(null);
     if (panel != null && parent != null) parent.removeView(panel);
     panel = null;

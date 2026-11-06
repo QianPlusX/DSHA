@@ -22,6 +22,7 @@
 | `app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java`、`app/src/main/assets/device-shell-policy.py` | 设备命令放行 `pm install`：只接受公开存储或 `/data/local/tmp` 里的 `.apk`，选项逐项白名单；ADB 通道按同一份白名单复核。 |
 | `ForegroundActivity.java`、`util/KeepAliveWindow.java` | 退到后台时挂 1×1 不可见悬浮窗（`TYPE_APPLICATION_OVERLAY`），让进程保持可感知重要级别；回前台立即移除，未授权「显示在其他应用上层」时静默跳过。 |
 | `ui/BrowserTasks.java`、`ui/MainActivity.java` | 从桌面图标重开时，若 Web 页面仍在运行就直接把那个任务带到前台，不再先显示一帧原生启动页再跳转。 |
+| `vscreen/VirtualScreenForeground.java`、`vscreen/VirtualScreenOverlayController.java` | 虚拟屏小窗顶栏只留「虚拟屏」标题、圆角统一 16dp；最小化改为收成 60dp 悬浮球，点球恢复，虚拟屏停止时小窗与球一起消失。 |
 
 以上改动对原版同样适用：`TERM` 缺失与启动检查在官方包中也存在。
 
