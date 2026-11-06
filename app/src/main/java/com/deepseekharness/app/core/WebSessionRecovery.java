@@ -23,6 +23,11 @@ final class WebSessionRecovery {
     boolean authenticate(StoredWebSession.Record record) throws Exception;
 
     boolean adopt(StoredWebSession.Record record) throws Exception;
+
+    /** 记录里的启动器已确认退出（宿主被杀、覆盖安装、机器重启后）。 */
+    default boolean exited(StoredWebSession.Record record) throws Exception {
+      return false;
+    }
   }
 
   static Result recover(Ports ports) {
@@ -30,6 +35,12 @@ final class WebSessionRecovery {
       var saved = ports.read();
       if (!ports.current()) return Result.STALE;
       if (saved == null) return Result.NONE;
+      // 宿主进程被替换（覆盖安装、强杀）后，旧启动器已退出就是明确结束，不再当未知挡住启动。
+      try {
+        if (ports.exited(saved)) return Result.STALE;
+      } catch (Exception unreadable) {
+        // 读不到进程状态时保持原有保守判定。
+      }
       if (!ports.compatible(saved) || !ports.verify(saved)) return Result.UNKNOWN;
       if (!ports.current()) return Result.STALE;
       if (!ports.authenticate(saved)) return Result.UNKNOWN;
