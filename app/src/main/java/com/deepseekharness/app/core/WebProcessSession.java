@@ -145,7 +145,11 @@ final class WebProcessSession {
     stopEvidence.run();
     try {
       if (state.retainedWebStopProof != null
-          && !manager.recoveredLauncherExited(state.retainedWebStopProof)) return true;
+          && !manager.recoveredLauncherExited(state.retainedWebStopProof)) {
+        // 覆盖安装或强杀后，旧启动器会变成孤儿：先回收孤儿，回收不到才继续阻塞。
+        if (!manager.reclaimUntrackedWebLaunchers()) return true;
+        return !manager.recoveredLauncherExited(state.retainedWebStopProof);
+      }
       if (!state.unreadableWebStopProof) return false;
       if (manager.confirmNoUntrackedWebLaunchers()) return false;
       // A killed host leaves its proot launcher orphaned; reclaim only those orphans so a
