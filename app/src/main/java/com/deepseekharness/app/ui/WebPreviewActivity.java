@@ -1401,10 +1401,14 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
   }
 
   // 画中画仍可见但 Activity 已暂停；完全不可见时才暂停网页绘制。
+  // 授权了悬浮窗（后台保活）时不暂停：onPause 会冻结网页计时器，WebSocket 心跳停掉，
+  // 回到前台就会先显示「重新连接中」。
   @Override
   protected void onStop() {
     if (retained != null) retained.routeRequestSent = null;
-    if (!pictureInPictureActiveOrTransitioning() && webView != null) {
+    if (!pictureInPictureActiveOrTransitioning()
+        && !com.deepseekharness.app.OverlayController.permitted(this)
+        && webView != null) {
       retained.needsStreamResume = true;
       webView.onPause();
     }

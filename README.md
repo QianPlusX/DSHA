@@ -23,6 +23,7 @@
 | `ForegroundActivity.java`、`util/KeepAliveWindow.java` | 退到后台时挂 1×1 不可见悬浮窗（`TYPE_APPLICATION_OVERLAY`），让进程保持可感知重要级别；回前台立即移除，未授权「显示在其他应用上层」时静默跳过。 |
 | `ui/BrowserTasks.java`、`ui/MainActivity.java` | 从桌面图标重开时，若 Web 页面仍在运行就直接把那个任务带到前台，不再先显示一帧原生启动页再跳转。 |
 | `runtime/WebProcessManager.java`、`core/WebProcessSession.java` | 应用被强杀后遗留的 proot 启动器（父进程已死）在下次启动前回收，不再让「启动」永远被「已知 Web 启动器未能确认退出」挡住；只处理同 UID、父进程不是本进程且已消失的孤儿。 |
+| `ui/WebPreviewActivity.java` | 授权悬浮窗（后台保活）时不再在 `onStop` 调 `webView.onPause()`；否则网页计时器与 WebSocket 心跳被冻结，回前台先显示「重新连接中」。 |
 | `ui/MainActivity.java` | 从桌面图标重开且 Web 仍在运行时，保持检查遮罩最多 2.5 秒等待直达 Web，不再先画一帧原生启动页。 |
 | `vscreen/VirtualScreenForeground.java`、`vscreen/VirtualScreenOverlayController.java` | 虚拟屏小窗顶栏只留「虚拟屏」标题、圆角统一 16dp；最小化改为收成 60dp 悬浮球，点球恢复，虚拟屏停止时小窗与球一起消失。 |
 
