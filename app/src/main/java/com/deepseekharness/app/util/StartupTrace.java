@@ -170,8 +170,8 @@ public final class StartupTrace {
     return new Snapshot(
         generation,
         revision,
-        Math.max(0, now - began),
-        Math.max(0, now - stageBegan),
+        began > 0 ? Math.max(0, now - began) : 0,
+        stageBegan > 0 ? Math.max(0, now - stageBegan) : 0,
         StartupText.render(stage, language),
         renderedLog,
         safe,
