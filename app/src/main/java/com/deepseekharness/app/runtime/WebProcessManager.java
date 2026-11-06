@@ -682,6 +682,71 @@ public class WebProcessManager {
     return true;
   }
 
+  /**
+   * Ends Web launchers left behind by a previous App process (killed or crashed).
+   *
+   * <p>Only same-UID {@code libproot*} launchers whose parent is no longer a live process
+   * other than this one are touched: those are the orphans of the dead host, never a
+   * launcher this process started itself and never a live sibling process's child.
+   */
+  public boolean reclaimUntrackedWebLaunchers() throws IOException {
+    String[] entries = recoveryProcessEntries();
+    if (entries == null) return false;
+    boolean sent = false;
+    for (String entry : entries) {
+      int pid = WebProcSel.parsePid(entry);
+      if (pid <= 0 || pid == recoveryHostPid()) continue;
+      Integer uid = processOwner(pid);
+      if (uid == null || uid != recoveryHostUid()) continue;
+      ProcessState value = inspect(pid);
+      if (value.kind == Kind.GONE || value.identity == null) continue;
+      String[] argv = value.command.split("\u0000");
+      if (argv.length == 0) continue;
+      String name = new File(argv[0]).getName();
+      if (!(name.startsWith("libproot")
+          || name.startsWith("libproroot")
+          || name.startsWith("libdsha-proroot"))) continue;
+      int parent = parentPid(pid);
+      if (parent == recoveryHostPid()) continue;
+      if (parent > 1 && instanceAlive(parent)) continue;
+      try {
+        android.system.Os.kill(pid, android.system.OsConstants.SIGTERM);
+        sent = true;
+      } catch (Exception ignored) {
+        // Permission or race: leave it to the barrier below.
+      }
+    }
+    if (!sent) return false;
+    try {
+      Thread.sleep(250);
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
+    }
+    return confirmNoUntrackedWebLaunchers();
+  }
+
+  int parentPid(int pid) {
+    try (var input = new java.io.BufferedReader(
+        new java.io.FileReader("/proc/" + pid + "/stat"))) {
+      String line = input.readLine();
+      if (line == null) return -1;
+      int close = line.lastIndexOf(')');
+      if (close < 0) return -1;
+      String[] rest = line.substring(close + 2).split(" ");
+      return rest.length < 2 ? -1 : Integer.parseInt(rest[1]);
+    } catch (IOException | RuntimeException unreadable) {
+      return -1;
+    }
+  }
+
+  boolean instanceAlive(int pid) {
+    try {
+      return inspect(pid).kind != Kind.GONE;
+    } catch (IOException unreadable) {
+      return true;
+    }
+  }
+
   String[] recoveryProcessEntries() {
     return new File("/proc").list();
   }

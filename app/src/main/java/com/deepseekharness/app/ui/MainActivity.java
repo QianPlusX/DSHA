@@ -46,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
    * 否则会残留下来，让用户之后手动点启动页时被意外带进 Web。
    */
   private boolean pendingOpenWeb;
+  /** Launcher entry with a running Web session: keep the check overlay up instead of
+   *  flashing the native start page while the page identity is re-verified. */
+  private boolean webHoldScheduled;
+  private boolean webHoldExpired;
 
   private String openedRecovery = "";
   private final androidx.activity.result.ActivityResultLauncher<String> localNetworkPermission =
@@ -222,6 +226,29 @@ public class MainActivity extends AppCompatActivity {
   private void showMain(
       Bundle savedInstanceState, ConfigStore config, HarnessController controller) {
     if (mainReady || isFinishing() || isDestroyed()) return;
+    if (!webHoldExpired
+        && BrowserTasks.launcher(getIntent())
+        && controller.isWebRunning()) {
+      // The Web task may still be recovering its identity; retry the direct hand-off and
+      // keep the check overlay instead of painting the native start page for a frame.
+      if (BrowserTasks.openRunningWeb(this) || BrowserTasks.resumeBackground(this, true)) {
+        discardedLauncherEntry = true;
+        finish();
+        return;
+      }
+      if (!webHoldScheduled) {
+        webHoldScheduled = true;
+        new android.os.Handler(getMainLooper())
+            .postDelayed(
+                () -> {
+                  webHoldExpired = true;
+                  if (!mainReady && !isFinishing() && !isDestroyed())
+                    showMain(pendingMainState, new ConfigStore(this), controller);
+                },
+                2500);
+      }
+      return;
+    }
     mainReady = true;
     if (entryOverlay != null && entryOverlay.getParent() instanceof android.view.ViewGroup parent)
       parent.removeView(entryOverlay);

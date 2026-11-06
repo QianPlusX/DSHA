@@ -146,7 +146,11 @@ final class WebProcessSession {
     try {
       if (state.retainedWebStopProof != null
           && !manager.recoveredLauncherExited(state.retainedWebStopProof)) return true;
-      return state.unreadableWebStopProof && !manager.confirmNoUntrackedWebLaunchers();
+      if (!state.unreadableWebStopProof) return false;
+      if (manager.confirmNoUntrackedWebLaunchers()) return false;
+      // A killed host leaves its proot launcher orphaned; reclaim only those orphans so a
+      // manual start after a crash does not stay blocked for good.
+      return !manager.reclaimUntrackedWebLaunchers();
     } catch (IOException unknown) {
       return true;
     }
