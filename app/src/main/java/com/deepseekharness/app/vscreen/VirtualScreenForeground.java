@@ -20,7 +20,7 @@ public final class VirtualScreenForeground {
   private ViewGroup parent;
   private ImageView image;
   private Bitmap bitmap;
-  private TextView bubble;
+  private android.widget.ImageView bubble;
   private long epoch, screenEpoch = -1;
   private VirtualScreenPreviews.Lease previewLease;
 
@@ -105,6 +105,7 @@ public final class VirtualScreenForeground {
     card.setCornerRadius(dp(activity, 16));
     card.setStroke(dp(activity, 1), activity.getColor(R.color.line));
     panel.setBackground(card);
+    panel.setClipToOutline(true); // 子视图（预览图）也要被 16dp 圆角裁切
     panel.setElevation(dp(activity, 12));
     LinearLayout bar = new LinearLayout(activity);
     bar.setGravity(Gravity.CENTER_VERTICAL);
@@ -117,17 +118,17 @@ public final class VirtualScreenForeground {
                 new android.content.Intent(activity, VirtualScreenActivity.class)));
     title.setTextSize(12);
     title.setTextColor(activity.getColor(R.color.text));
-    title.setPadding(dp(activity, 8), dp(activity, 8), 0, dp(activity, 8));
-    bar.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
+    title.setPadding(dp(activity, 10), 0, 0, 0);
+    bar.addView(title, new LinearLayout.LayoutParams(0, dp(activity, 36), 1));
     TextView hide = new TextView(activity);
     hide.setText("−");
     hide.setTextSize(22);
     hide.setTextColor(activity.getColor(R.color.text));
     hide.setGravity(Gravity.CENTER);
     hide.setContentDescription(UiText.choose("收起为悬浮球", "Minimize to bubble"));
-    bar.addView(hide, new LinearLayout.LayoutParams(dp(activity, 40), dp(activity, 40)));
+    bar.addView(hide, new LinearLayout.LayoutParams(dp(activity, 36), dp(activity, 36)));
     hide.setOnClickListener(v -> minimize());
-    panel.addView(bar);
+    panel.addView(bar, new LinearLayout.LayoutParams(-1, dp(activity, 36)));
     image = new ImageView(activity);
     image.setScaleType(ImageView.ScaleType.FIT_CENTER);
     image.setBackgroundColor(0xff101218);
@@ -213,11 +214,11 @@ public final class VirtualScreenForeground {
     float x = Math.max(0, panel.getX());
     float y = Math.max(0, panel.getY());
     panel.setVisibility(android.view.View.GONE);
-    TextView dot = new TextView(activity);
-    dot.setText(UiText.choose("虚拟屏", "Screen"));
-    dot.setTextSize(11);
-    dot.setTextColor(activity.getColor(R.color.text));
-    dot.setGravity(Gravity.CENTER);
+    android.widget.ImageView dot = new android.widget.ImageView(activity);
+    dot.setImageResource(R.drawable.ic_vscreen);
+    dot.setScaleType(android.widget.ImageView.ScaleType.CENTER);
+    dot.setColorFilter(activity.getColor(R.color.text));
+    dot.setPadding(dp(activity, 16), dp(activity, 16), dp(activity, 16), dp(activity, 16));
     dot.setContentDescription(UiText.choose("展开虚拟屏预览", "Show virtual screen preview"));
     android.graphics.drawable.GradientDrawable shape =
         new android.graphics.drawable.GradientDrawable();
@@ -225,9 +226,9 @@ public final class VirtualScreenForeground {
     shape.setColor(activity.getColor(R.color.card));
     shape.setStroke(dp(activity, 1), activity.getColor(R.color.line));
     dot.setBackground(shape);
-    dot.setElevation(dp(activity, 12));
+    dot.setElevation(dp(activity, 8));
     FrameLayout.LayoutParams lp =
-        new FrameLayout.LayoutParams(dp(activity, 60), dp(activity, 60));
+        new FrameLayout.LayoutParams(dp(activity, 56), dp(activity, 56));
     lp.gravity = Gravity.TOP | Gravity.START;
     lp.leftMargin = Math.round(x);
     lp.topMargin = Math.round(y);
