@@ -1135,6 +1135,13 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
     @Override
     public boolean onConsoleMessage(android.webkit.ConsoleMessage message) {
       if (!isCurrentPage(sourceView)) return true;
+      if (message.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR)
+        com.deepseekharness.app.core.DiagnosticLog.record(
+            WebPreviewActivity.this,
+            "WEB_CONSOLE_ERROR",
+            message.message().length() > 300
+                ? message.message().substring(0, 300)
+                : message.message());
       com.deepseekharness.app.core.StartupDiagnostics diagnostics =
           com.deepseekharness.app.core.HarnessController.get(WebPreviewActivity.this)
               .startupDiagnostics();
