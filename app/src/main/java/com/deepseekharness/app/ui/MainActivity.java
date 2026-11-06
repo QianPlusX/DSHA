@@ -236,6 +236,15 @@ public class MainActivity extends AppCompatActivity {
         finish();
         return;
       }
+      // 进程被回收后 Web 任务随进程消失，openRunningWeb 必然找不到；此时直接用
+      // 已恢复的鉴权地址重新打开工作台，而不是退回原生启动页再跳转。
+      String authUrl = controller.getWebAuthUrl();
+      if (!authUrl.isEmpty()) {
+        startActivity(BrowserConversationRoute.conversation(this, authUrl, null));
+        discardedLauncherEntry = true;
+        finish();
+        return;
+      }
       if (!webHoldScheduled) {
         webHoldScheduled = true;
         new android.os.Handler(getMainLooper())
