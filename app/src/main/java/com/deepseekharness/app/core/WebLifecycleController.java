@@ -195,12 +195,6 @@ final class WebLifecycleController {
                       return webProc.verifySession(r.proof());
                     }
 
-                    public boolean exited(
-                        com.deepseekharness.app.runtime.StoredWebSession.Record r)
-                        throws Exception {
-                      return webProc.recoveredLauncherExited(r.proof());
-                    }
-
                     public boolean authenticate(
                         com.deepseekharness.app.runtime.StoredWebSession.Record r) {
                       var authentication =
