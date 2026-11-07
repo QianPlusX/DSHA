@@ -675,11 +675,8 @@ public class WebProcessManager {
       if (!(name.startsWith("libproot")
           || name.startsWith("libproroot")
           || name.startsWith("libdsha-proroot"))) continue;
-      // 本进程自己的子进程（当前 run 的启动器、或用户开的终端）由 run 状态管理，不属于
-      // “旧宿主遗留”；否则终端一开着，启动/停止就会被永久挡在这道门后。
-      if (parentPid(pid) == recoveryHostPid()) continue;
       // 此处只证明“没有”，不授予signal权限。旧记录缺少可信标记时，
-      // 同UID的遗留启动器都保留屏障；不能把未识别的旧argv当作已经退出。
+      // 同UID的任何此类启动器都保留屏障；不能把未识别的终端或旧argv当作已经退出。
       return false;
     }
     return true;
