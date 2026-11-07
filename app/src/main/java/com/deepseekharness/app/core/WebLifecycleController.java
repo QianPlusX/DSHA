@@ -1499,7 +1499,6 @@ final class WebLifecycleController {
                       }
                       state.retainedWebStopProof = null;
                       state.unreadableWebStopProof = false;
-                      state.restoreUnknown = false;
                     }
                     if (stopError.isEmpty()
                         && !com.deepseekharness.app.core.MaintenanceCoordinator
